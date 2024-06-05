@@ -4,7 +4,7 @@ from gymnasium import spaces
 
 
 class ComplexTrader(gym.Env):
-    def __init__(self, states, initial_balance = 1e6):
+    def __init__(self, states, initial_balance=1e6):
         super(ComplexTrader, self).__init__()
 
         self.states = states
@@ -21,13 +21,11 @@ class ComplexTrader(gym.Env):
         self.time_index = 0
 
         self.action_space = spaces.Box(low=-1, high=1, shape=(states.n_stocks,), dtype=np.float32)
-
-        self.observation_space = spaces.Box(low = -np.inf, high = np.inf, shape=self.states.shape, dtype=np.float32)
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self.states.shape, dtype=np.float32)
 
         self.state = np.concatenate([self.states.get_state(0).flatten(), self.balance, self.shares])
 
     def reset(self):
-        # this doesn't deal with the case of resetting to a different time period
         self.balance = self.initial_balance
         self.networth = self.initial_balance
         self.shares = self.initial_shares
@@ -46,30 +44,27 @@ class ComplexTrader(gym.Env):
         self.time_index += 1
         self.update_state()
 
-        done = self.time_index > 3 #termination criterion
+        done = self.time_index >= len(self.states.df) - 1
         info = {}
-        
+
         return self.state, reward, done, info
 
     def update_state(self):
         self.state = np.concatenate([self.states.get_state(self.time_index).flatten(), self.balance, self.shares])
 
-
     def take_action(self, action):
         sell_price = self.states.get_sell_price(self.time_index)
         buy_price = self.states.get_buy_price(self.time_index)
 
-        # TODO: currently there are actions are impossible and lead to errors (e.g. a1 = 0.9, a2 = 0.5 would use more cash to buy shares than we have available)
+        for i in range(len(action)):
+            if action[i] < 0:  # sell
+                self.shares[i] *= (1 + action[i].item())
+                self.balance += sell_price[i] * self.shares[i] * (-action[i].item())
 
         for i in range(len(action)):
-            if action[i] < 0: # sell
-                self.shares[i] *= (1 + action[i])
-                self.balance += sell_price[i] * self.shares[i] * (-action[i])
-        
-        for i in range(len(action)):
-            if action[i] >= 0: # buy
-                self.shares[i] += self.balance * action[i] / buy_price[i]
-                self.balance -= self.balance * action[i]
+            if action[i] >= 0:  # buy
+                self.shares[i] += self.balance * action[i].item() / buy_price[i]
+                self.balance -= self.balance * action[i].item()
 
     def set_networth(self):
         self.previous_networth = self.networth
@@ -80,4 +75,3 @@ class ComplexTrader(gym.Env):
         print(f'Shares: {self.shares}')
         print(f'Balance: {self.balance}')
         print(f'Networth: {self.networth}')
-        # other stuff e.g. printing more information 
