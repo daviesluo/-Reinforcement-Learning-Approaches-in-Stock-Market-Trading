@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="StockTrader",
+    name="stocktrader",
     version="0.1.0",
     description="Custom Gymnasium environments for Stock Trading",
     author="Davies Luo and Matthew Fisher",
@@ -10,6 +10,7 @@ setup(
     install_requires=[
         'gymnasium',
         'numpy',
+        'torch',
     ],
     include_package_data=True
 )

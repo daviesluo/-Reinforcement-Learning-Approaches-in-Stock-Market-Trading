@@ -1,8 +1,4 @@
-Processed Data/data_merged.csv
-Processed Data/data_time_filled.csv
-Processed Data/data_with_economic_indicators.csv
-Processed Data/data_with_google_trends.csv
-Processed Data/data_with_number_of_shares.csv
+Processed Data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
